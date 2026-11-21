@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "AlgoArena"
+description = "A real-time head-to-head Python algorithm battle game. Players join a room, solve the same challenge, and compete for points and hearts with synchronized match events."
+version = "1.0.0"
+id = "artifacts/algoarena"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25795
+
+[services.development]
+run = "pnpm --filter @workspace/algoarena run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/algoarena", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/algoarena/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25795"
+BASE_PATH = "/"

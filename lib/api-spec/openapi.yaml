@@ -1,0 +1,363 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: arena
+    description: Challenges and live battles
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /challenges:
+    get:
+      operationId: listChallenges
+      tags: [arena]
+      summary: List coding challenges
+      responses:
+        "200":
+          description: Available challenges
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Challenge"
+  /challenges/{challengeId}:
+    get:
+      operationId: getChallenge
+      tags: [arena]
+      summary: Get a coding challenge
+      parameters:
+        - in: path
+          name: challengeId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Challenge details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Challenge"
+        "404":
+          description: Challenge not found
+  /battles:
+    post:
+      operationId: createBattle
+      tags: [arena]
+      summary: Create a battle room
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBattleInput"
+      responses:
+        "201":
+          description: Battle room created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BattleSession"
+  /battles/{roomId}/players/{playerId}:
+    get:
+      operationId: getBattle
+      tags: [arena]
+      summary: Get current battle state
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: playerId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Current battle state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BattleSession"
+        "404":
+          description: Battle not found
+  /battles/{roomId}/join:
+    post:
+      operationId: joinBattle
+      tags: [arena]
+      summary: Join an existing battle
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinBattleInput"
+      responses:
+        "200":
+          description: Joined battle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BattleSession"
+        "404":
+          description: Battle not found
+        "409":
+          description: Battle is full or no longer joinable
+  /battles/{roomId}/submissions:
+    post:
+      operationId: submitCode
+      tags: [arena]
+      summary: Run public tests or submit a solution
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionInput"
+      responses:
+        "200":
+          description: Judge result and updated battle state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionResult"
+        "404":
+          description: Battle or player not found
+        "409":
+          description: Battle is not active
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    ChallengeExample:
+      type: object
+      properties:
+        input:
+          type: string
+        output:
+          type: string
+        explanation:
+          type: string
+      required: [input, output, explanation]
+    Challenge:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        difficulty:
+          type: string
+          enum: [BRONZE, SILVER, GOLD]
+        points:
+          type: integer
+        summary:
+          type: string
+        description:
+          type: string
+        inputFormat:
+          type: string
+        outputFormat:
+          type: string
+        examples:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChallengeExample"
+        constraints:
+          type: array
+          items:
+            type: string
+        starterCode:
+          type: string
+        functionName:
+          type: string
+      required:
+        - id
+        - title
+        - difficulty
+        - points
+        - summary
+        - description
+        - inputFormat
+        - outputFormat
+        - examples
+        - constraints
+        - starterCode
+        - functionName
+    BattlePlayer:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        hearts:
+          type: integer
+        points:
+          type: integer
+        submissions:
+          type: integer
+        currentChallengeIndex:
+          type: integer
+        connected:
+          type: boolean
+      required: [id, name, hearts, points, submissions, currentChallengeIndex, connected]
+    BattleLogEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        challengeId:
+          type: string
+        playerId:
+          type: string
+        playerName:
+          type: string
+        mode:
+          type: string
+          enum: [RUN, SUBMIT]
+        verdict:
+          type: string
+          enum: [AC, WA, TLE, MLE, RE, CE]
+        pointsAwarded:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, challengeId, playerId, playerName, mode, verdict, pointsAwarded, createdAt]
+    Battle:
+      type: object
+      properties:
+        roomId:
+          type: string
+        challengeIds:
+          type: array
+          minItems: 3
+          maxItems: 3
+          uniqueItems: true
+          items:
+            type: string
+        status:
+          type: string
+          enum: [WAITING, ACTIVE, FINISHED]
+        players:
+          type: array
+          items:
+            $ref: "#/components/schemas/BattlePlayer"
+        secondsRemaining:
+          type: integer
+        elapsedSeconds:
+          type: integer
+        winnerPlayerId:
+          type: ["string", "null"]
+        submissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/BattleLogEntry"
+      required: [roomId, challengeIds, status, players, secondsRemaining, elapsedSeconds, winnerPlayerId, submissions]
+    BattleSession:
+      type: object
+      properties:
+        playerId:
+          type: string
+        battle:
+          $ref: "#/components/schemas/Battle"
+        challenge:
+          $ref: "#/components/schemas/Challenge"
+      required: [playerId, battle, challenge]
+    CreateBattleInput:
+      type: object
+      properties:
+        difficulty:
+          type: string
+          enum: [BRONZE, SILVER, GOLD]
+        playerName:
+          type: string
+          minLength: 1
+          maxLength: 24
+      required: [difficulty, playerName]
+    JoinBattleInput:
+      type: object
+      properties:
+        playerName:
+          type: string
+          minLength: 1
+          maxLength: 24
+      required: [playerName]
+    SubmissionInput:
+      type: object
+      properties:
+        playerId:
+          type: string
+        challengeId:
+          type: string
+        code:
+          type: string
+          maxLength: 12000
+        mode:
+          type: string
+          enum: [RUN, SUBMIT]
+      required: [playerId, challengeId, code, mode]
+    SubmissionResult:
+      type: object
+      properties:
+        verdict:
+          type: string
+          enum: [AC, WA, TLE, MLE, RE, CE]
+        passed:
+          type: integer
+        total:
+          type: integer
+        runtimeMs:
+          type: integer
+        message:
+          type: string
+        output:
+          type: ["string", "null"]
+        damageDealt:
+          type: integer
+        pointsAwarded:
+          type: integer
+        battle:
+          $ref: "#/components/schemas/Battle"
+      required: [verdict, passed, total, runtimeMs, message, output, damageDealt, pointsAwarded, battle]
+
