@@ -20,7 +20,7 @@ COPY tsconfig*.json ./
 RUN pnpm install --no-frozen-lockfile
 
 # 프론트엔드(algoarena) 및 백엔드(api-server) 빌드
-RUN pnpm run build
+RUN pnpm --filter "./artifacts/**" --if-present run build
 
 # 빌드된 프론트엔드 정적 파일을 백엔드 public 폴더로 복사
 RUN mkdir -p artifacts/api-server/dist/public && \
