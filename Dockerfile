@@ -22,9 +22,10 @@ RUN pnpm install --no-frozen-lockfile
 # 프론트엔드(algoarena) 및 백엔드(api-server) 빌드
 RUN PORT=7860 BASE_PATH=/ pnpm --filter "./artifacts/**" --if-present run build
 
-# 빌드된 프론트엔드 정적 파일을 백엔드 public 폴더로 복사
-RUN mkdir -p artifacts/api-server/dist/public && \
-    cp -r artifacts/algoarena/dist/* artifacts/api-server/dist/public/
+# 💡 [수정됨] 빌드된 프론트엔드 파일을 서버가 찾을 만한 public 위치들에 복사
+RUN mkdir -p artifacts/api-server/dist/public public && \
+    cp -r artifacts/algoarena/dist/* artifacts/api-server/dist/public/ && \
+    cp -r artifacts/algoarena/dist/* public/
 
 # 서버 포트 설정 (Render는 자체적으로 PORT 환경변수를 주입하므로 기본값 설정용)
 ENV PORT=7860
