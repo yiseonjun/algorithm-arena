@@ -45,7 +45,7 @@ const staticDir = staticCandidates.find((dir) =>
 if (staticDir) {
   app.use(express.static(staticDir));
 
-  app.get("*", (req, res, next) => {
+  app.get("/{*splat}", (req, res, next) => {
     if (req.path.startsWith("/api")) {
       return next();
     }
