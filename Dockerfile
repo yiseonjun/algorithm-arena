@@ -19,8 +19,8 @@ COPY tsconfig*.json ./
 # 💡 [수정됨] 도커 환경에서 esbuild 등의 빌드 스크립트를 허용하도록 옵션 추가
 RUN pnpm install --no-frozen-lockfile
 
-# 프론트엔드(algoarena) 및 백엔드(api-server) 빌드
-RUN pnpm --filter "./artifacts/**" --if-present run build
+# 프론트엔드(algoarena) 및 백엔드(api-server) 빌드 (vite.config.ts가 요구하는 PORT=7860 전달)
+RUN PORT=7860 pnpm --filter "./artifacts/**" --if-present run build
 
 # 빌드된 프론트엔드 정적 파일을 백엔드 public 폴더로 복사
 RUN mkdir -p artifacts/api-server/dist/public && \
