@@ -5,7 +5,7 @@ FROM node:24-slim
 RUN apt-get update && apt-get install -y python3 && rm -rf /var/lib/apt/lists/*
 
 # pnpm 활성화
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
 WORKDIR /app
 
