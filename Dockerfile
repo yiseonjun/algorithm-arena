@@ -17,7 +17,7 @@ COPY scripts ./scripts
 COPY tsconfig*.json ./
 
 # 💡 [수정됨] 도커 환경에서 esbuild 등의 빌드 스크립트를 허용하도록 옵션 추가
-RUN pnpm install --no-frozen-lockfile --config.only-built-dependencies=esbuild
+RUN pnpm install --no-frozen-lockfile
 
 # 프론트엔드(algoarena) 및 백엔드(api-server) 빌드
 RUN pnpm run build
