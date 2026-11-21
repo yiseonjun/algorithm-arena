@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
@@ -30,5 +32,25 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
+
+const staticCandidates = [
+  path.resolve(process.cwd(), "public"),
+  path.resolve(process.cwd(), "artifacts/api-server/dist/public"),
+];
+
+const staticDir = staticCandidates.find((dir) =>
+  fs.existsSync(path.join(dir, "index.html")),
+);
+
+if (staticDir) {
+  app.use(express.static(staticDir));
+
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api")) {
+      return next();
+    }
+    res.sendFile(path.join(staticDir, "index.html"));
+  });
+}
 
 export default app;
